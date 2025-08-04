@@ -1,0 +1,8 @@
+streamlit
+lightkurve
+transitleastsquares
+astropy
+astroquery
+matplotlib
+numpy==1.25
+
