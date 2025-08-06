@@ -23,7 +23,7 @@ def load_lightcurve(uploaded_file):
         raise ValueError("Could not read light curve file. Try .fits or .csv.")
 
 
-def iterative_tls_search(lc, max_planets=5, min_snr=5):
+def iterative_tls_search(lc, max_planets=5, min_snr=5, period_min=1, period_max=150, progress_callback=None):
     results = []
     time = lc.time.value if hasattr(lc.time, 'value') else lc.time
     flux = lc.flux.value if hasattr(lc.flux, 'value') else lc.flux
@@ -31,8 +31,10 @@ def iterative_tls_search(lc, max_planets=5, min_snr=5):
     flux = np.array(flux, dtype=float)
 
     for i in range(max_planets):
+        if progress_callback:
+            progress_callback(i, max_planets)
         model = transitleastsquares(time, flux)
-        result = model.power(period_min=1, period_max=150, transit_mask=True)
+        result = model.power(period_min=period_min, period_max=period_max, transit_mask=True)
 
         if result.SDE < min_snr:
             break
