@@ -4,6 +4,8 @@ import streamlit as st
 from pipeline import load_lightcurve, iterative_tls_search, summarize_results
 import lightkurve as lk
 import matplotlib.pyplot as plt
+from pipeline import load_lightcurve, iterative_tls_search, summarize_results, fetch_stellar_mass, make_planet_schematic
+
 
 st.set_page_config(page_title="Exoplanet Explorer", layout="wide")
 st.title("🔭 Exoplanet Explorer")
@@ -61,11 +63,25 @@ if query:
                     status_text.empty()
 
 
-
                 if results:
                     st.success(f"Found {len(results)} planets")
                     summary = summarize_results(results)
                     st.table(summary)
+
+    # Try to get stellar mass from MAST using the selected target name
+                    try:
+        # The selected label looks like "Kepler: Kepler-11" — we want the actual target name
+                        selected_target_name = search_results[options.index(selected)].target_name
+                        m_star = fetch_stellar_mass(selected_target_name)
+                    except Exception:
+                        m_star = 1.0  # fallback if not found
+
+                   
+                    st.markdown("#### 🛰 System sketch (distances only, radii not to scale)")
+                    m_star_guess = st.number_input("Stellar mass [M☉] (guess if unknown)", min_value=0.05, value=1.0, step=0.05)
+                    fig = make_planet_schematic(results, star_mass=m_star)
+                    st.pyplot(fig)
+
                 else:
                     st.warning("No planets found.")
 
