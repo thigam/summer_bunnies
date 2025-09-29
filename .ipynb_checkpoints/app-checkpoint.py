@@ -15,11 +15,7 @@ query = st.text_input("Search for a star (e.g. 'Kepler-11', 'TIC 123456789', 'KI
 
 if query:
     with st.spinner("Searching MAST catalog..."):
-        mission = st.selectbox("Mission", ["Any","Kepler","K2","TESS"], index=0)
-            if mission == "Any":
-                search_results = lk.search_lightcurve(query)
-            else:
-                search_results = lk.search_lightcurve(query, mission=mission)
+        search_results = lk.search_lightcurve(query, mission="Kepler", cadence="long")
 
     if len(search_results) == 0:
         st.warning("No results found.")
