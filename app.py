@@ -5,6 +5,16 @@ from pipeline import load_lightcurve, iterative_tls_search, summarize_results
 import lightkurve as lk
 import matplotlib.pyplot as plt
 from pipeline import load_lightcurve, iterative_tls_search, summarize_results, fetch_stellar_mass, make_planet_schematic
+from astroquery.mast import Observations, Mast
+# Log out to clear any stale auth/session
+try:
+    Mast.logout()
+except Exception:
+    pass
+
+# Force the current portal endpoints explicitly (runtime hot-patch)
+Observations.MAST_REQUEST_URL  = "https://mast.stsci.edu/api/v0/invoke"
+Observations.MAST_DOWNLOAD_URL = "https://mast.stsci.edu/api/v0.1/Download/file"
 
 
 st.set_page_config(page_title="Exoplanet Explorer", layout="wide")
@@ -16,10 +26,18 @@ query = st.text_input("Search for a star (e.g. 'Kepler-11', 'TIC 123456789', 'KI
 if query:
     with st.spinner("Searching MAST catalog..."):
         mission = st.selectbox("Mission", ["Any","Kepler","K2","TESS"], index=0)
-        if mission == "Any":
-            search_results = lk.search_lightcurve(query)
-        else:
-            search_results = lk.search_lightcurve(query, mission=mission)
+        try:
+            if mission == "Any":
+                search_results = lk.search_lightcurve(query)
+            else:
+                search_results = lk.search_lightcurve(query, mission=mission)
+        except requests.HTTPError as e:
+            st.error("MAST search failed (HTTP error). This is usually a temporary portal issue or a version mismatch. "
+                     "Try updating astroquery/lightkurve and retry. Details: " + str(e))
+            st.stop()
+        except Exception as e:
+            st.error(f"MAST search failed: {e}")
+            st.stop()
 
     if len(search_results) == 0:
         st.warning("No results found.")
