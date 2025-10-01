@@ -31,10 +31,6 @@ if query:
                 search_results = lk.search_lightcurve(query)
             else:
                 search_results = lk.search_lightcurve(query, mission=mission)
-        except requests.HTTPError as e:
-            st.error("MAST search failed (HTTP error). This is usually a temporary portal issue or a version mismatch. "
-                     "Try updating astroquery/lightkurve and retry. Details: " + str(e))
-            st.stop()
         except Exception as e:
             st.error(f"MAST search failed: {e}")
             st.stop()
